@@ -1,0 +1,13 @@
+# Maven
+target/
+dependency-reduced-pom.xml
+
+# artefatos gerados pelo perfil "server"
+server/
+
+# IDEs / SO
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
