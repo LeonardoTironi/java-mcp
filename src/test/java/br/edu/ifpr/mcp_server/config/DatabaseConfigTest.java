@@ -11,6 +11,15 @@ import org.junit.jupiter.api.Test;
 
 class DatabaseConfigTest {
 
+   // ==========================================================================
+   // Os métodos de teste a seguir verificam a configuração de acesso ao banco
+   // (fromMap recebe um mapa no lugar das variáveis de ambiente reais):
+   // - sem variáveis, os valores padrão são usados?
+   // - as variáveis definidas substituem os padrões?
+   // - a senha não aparece no toString (e, portanto, nos logs)?
+   // - URL vazia, usuário ou senha nulos são rejeitados?
+   // ==========================================================================
+
    @Test
    void deveUsarValoresPadraoQuandoAmbienteVazio() {
       DatabaseConfig config = DatabaseConfig.fromMap(Map.of());
@@ -34,6 +43,7 @@ class DatabaseConfigTest {
 
    @Test
    void deveUsarPadraoQuandoVariavelEmBranco() {
+      // variável definida só com espaços conta como não definida
       DatabaseConfig config = DatabaseConfig.fromMap(Map.of(
                                                DatabaseConfig.ENV_URL,"   "));
 
@@ -45,6 +55,7 @@ class DatabaseConfigTest {
       DatabaseConfig config = new DatabaseConfig("jdbc:x","u","segredo");
 
       assertFalse(config.toString().contains("segredo"));
+      // no lugar da senha aparece uma máscara
       assertTrue(config.toString().contains("****"));
    }
 

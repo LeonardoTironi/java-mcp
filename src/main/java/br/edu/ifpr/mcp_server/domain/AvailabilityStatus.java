@@ -1,6 +1,6 @@
 package br.edu.ifpr.mcp_server.domain;
 
-/** Situação do anúncio (enum "AvailabilityStatus"). */
+/** Situação do anúncio de um imóvel (enum "AvailabilityStatus"). */
 public enum AvailabilityStatus implements Labeled {
    DRAFT("rascunho"),
    AVAILABLE("disponível"),

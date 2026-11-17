@@ -11,6 +11,15 @@ import org.junit.jupiter.api.Test;
 
 class PropertyFilterTest {
 
+   // ==========================================================================
+   // Os métodos de teste a seguir verificam o filtro de busca de imóveis:
+   // - sem critérios, o limite e a ordenação padrão são aplicados?
+   // - o limite aceita as bordas (1 e o máximo) e rejeita o que fica fora?
+   // - o estado é normalizado para maiúsculas e validado?
+   // - faixas de preço e de área com mínimo maior que o máximo são
+   //   rejeitadas?
+   // ==========================================================================
+
    @Test
    void deveAplicarPadroesQuandoVazio() {
       PropertyFilter filter = PropertyFilter.builder().build();
@@ -23,6 +32,7 @@ class PropertyFilterTest {
 
    @Test
    void deveManterLimitePadraoQuandoNulo() {
+      // null significa "não informado" (o argumento opcional da ferramenta)
       PropertyFilter filter = PropertyFilter.builder().limit(null).build();
 
       assertEquals(PropertyFilter.DEFAULT_LIMIT,filter.limit());
@@ -59,6 +69,7 @@ class PropertyFilterTest {
 
    @Test
    void deveRejeitarEstadoInvalido() {
+      // o estado deve ser a sigla com duas letras, não o nome
       assertThrows(IllegalArgumentException.class,
                    () -> PropertyFilter.builder().state("Paraná").build());
    }
@@ -83,6 +94,7 @@ class PropertyFilterTest {
 
    @Test
    void deveAceitarFaixaComMinimoIgualAoMaximo() {
+      // mínimo igual ao máximo é válido: busca um preço exato
       BigDecimal value = new BigDecimal("300000");
 
       assertDoesNotThrow(() -> PropertyFilter.builder()

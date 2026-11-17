@@ -22,15 +22,30 @@ class PropertySqlBuilderTest {
 
    /** Cada '?' do SQL deve ter exatamente um parâmetro correspondente. */
    private static void assertPlaceholdersMatch(SqlQuery query) {
-      long placeholders = query.sql().chars().filter(c -> c == '?').count();
+                          // percorre os caracteres do SQL...
+      long placeholders = query.sql().chars()
+                          // ...e conta apenas os '?'
+                          .filter(c -> c == '?').count();
 
       assertEquals(query.params().size(),placeholders,query.sql());
    }
+
+   // ==========================================================================
+   // Os métodos de teste a seguir verificam o SQL gerado para as consultas,
+   // sem executá-lo (não precisam do banco):
+   // - cada filtro informado vira uma condição com parâmetro '?'?
+   // - os valores do usuário nunca entram no texto do SQL?
+   // - imóveis "venda e locação" (BOTH) entram nas duas finalidades?
+   // - toda ordenação tem desempate pelo código?
+   // - detalhes, localidades e estatísticas geram o SQL esperado?
+   // ==========================================================================
 
    @Test
    void buscaSemFiltrosDeveTerApenasCondicoesFixasELimite() {
       SqlQuery query = builder.search(PropertyFilter.builder().build());
 
+      // a condição fixa garante que só imóveis visíveis e disponíveis
+      // sejam buscados
       assertTrue(query.sql().contains(PropertySqlBuilder.AVAILABLE));
       assertTrue(query.sql().endsWith(" LIMIT ?"));
       assertEquals(List.of(PropertyFilter.DEFAULT_LIMIT),query.params());
@@ -59,6 +74,8 @@ class PropertySqlBuilderTest {
       SqlQuery query = builder.search(filter);
 
       assertPlaceholdersMatch(query);
+      // o texto é procurado em quatro colunas (um parâmetro para cada);
+      // cidade e bairro usam '%' para buscar por trecho (LIKE)
       assertEquals(List.of("%piscina%","%piscina%","%piscina%","%piscina%",
                            "HOUSE","SELL","RESIDENTIAL",
                            "%Curitiba%","%Batel%","PR",
@@ -77,6 +94,8 @@ class PropertySqlBuilderTest {
                                             .build();
       SqlQuery       query  = builder.search(filter);
 
+      // a tentativa de injeção de SQL fica só nos parâmetros, onde é tratada
+      // como um texto qualquer, e não no comando SQL
       assertFalse(query.sql().contains(attack));
       assertTrue(query.params().contains("%" + attack + "%"));
    }
@@ -87,6 +106,7 @@ class PropertySqlBuilderTest {
                                                     .purpose(Purpose.SELL)
                                                     .build());
 
+      // a finalidade pedida ou 'BOTH' (imóvel à venda e para locação)
       assertTrue(query.sql().contains("IN (CAST(? AS \"Purpose\"), 'BOTH')"));
    }
 
@@ -97,6 +117,7 @@ class PropertySqlBuilderTest {
                                                     .maxPrice(BigDecimal.TEN)
                                                     .build());
 
+      // em imóveis BOTH, a faixa de preço usa o valor do aluguel
       assertTrue(query.sql().contains("rentPrice"));
       assertPlaceholdersMatch(query);
    }
@@ -111,6 +132,7 @@ class PropertySqlBuilderTest {
       assertFalse(query.sql().contains("rentPrice"));
    }
 
+   // teste parametrizado: executa uma vez para cada valor de SortOrder
    @ParameterizedTest
    @EnumSource(SortOrder.class)
    void todaOrdenacaoDeveGerarOrderByComDesempate(SortOrder order) {
@@ -118,6 +140,7 @@ class PropertySqlBuilderTest {
                                                     .sortOrder(order)
                                                     .build());
 
+      // o desempate pelo código deixa a ordem dos resultados estável
       assertTrue(query.sql().contains(" ORDER BY "));
       assertTrue(query.sql().contains(", p.code LIMIT ?"));
       assertPlaceholdersMatch(query);
@@ -129,6 +152,7 @@ class PropertySqlBuilderTest {
                                                     .sortOrder(SortOrder.PRICE_ASC)
                                                     .build());
 
+      // imóveis sem preço informado vão para o final
       assertTrue(query.sql().contains("ORDER BY p.\"minPrice\" ASC NULLS LAST"));
    }
 
@@ -136,6 +160,7 @@ class PropertySqlBuilderTest {
    void detalhePorIdDeveFiltrarPorIdEVisibilidade() {
       SqlQuery query = builder.detailById("prop-001");
 
+      // imóveis excluídos ou ocultos do site não podem ser detalhados
       assertTrue(query.sql().contains(PropertySqlBuilder.VISIBLE));
       assertTrue(query.sql().endsWith("p.id = ?"));
       assertEquals(List.of("prop-001"),query.params());
@@ -145,6 +170,7 @@ class PropertySqlBuilderTest {
    void detalhePorCodigoDeveIgnorarCaixa() {
       SqlQuery query = builder.detailByCode("imv-0001");
 
+      // a coluna e o parâmetro são comparados em maiúsculas
       assertTrue(query.sql().endsWith("upper(p.code) = ?"));
       assertEquals(List.of("IMV-0001"),query.params());
    }
@@ -182,6 +208,7 @@ class PropertySqlBuilderTest {
                                                         .build());
 
       assertTrue(query.sql().endsWith("GROUP BY p.type ORDER BY p.type"));
+      // as estatísticas consideram todos os imóveis, sem limite
       assertFalse(query.sql().contains("LIMIT"));
       assertEquals(List.of("SELL","%Londrina%"),query.params());
       assertPlaceholdersMatch(query);
@@ -189,6 +216,8 @@ class PropertySqlBuilderTest {
 
    @Test
    void padraoContemDeveEscaparCuringas() {
+      // '%' e '_' são curingas do LIKE e '\' é o escape: digitados pelo
+      // usuário, devem ser procurados literalmente (em Java, "\\" é uma '\')
       assertEquals("%50\\%\\_a\\\\b%",
                    PropertySqlBuilder.containsPattern("50%_a\\b"));
    }

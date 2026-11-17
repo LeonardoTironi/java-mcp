@@ -19,6 +19,8 @@ import tools.jackson.databind.json.JsonMapper;
  * testes de integração.
  */
 class JdbcPropertyRepositoryTest {
+   // fábrica de conexões escrita como lambda: toda tentativa de conectar
+   // lança SQLException, como se o banco estivesse fora do ar
    private static final ConnectionFactory OFFLINE =
                     () -> { throw new SQLException("banco fora do ar"); };
 
@@ -27,11 +29,20 @@ class JdbcPropertyRepositoryTest {
                                     new PropertyRowMapper(new JsonMapper()));
 
    private static void assertWrapsSqlException(Executable call) {
+      // a SQLException (verificada) deve chegar como RepositoryException,
+      // guardando a original como causa e repetindo a sua mensagem
       RepositoryException ex = assertThrows(RepositoryException.class,call);
 
       assertInstanceOf(SQLException.class,ex.getCause());
       assertTrue(ex.getMessage().contains("banco fora do ar"));
    }
+
+   // ==========================================================================
+   // Os métodos de teste a seguir verificam, para cada consulta do
+   // repositório:
+   // - a falha de conexão vira RepositoryException com a causa original?
+   // - dependências nulas são rejeitadas no construtor?
+   // ==========================================================================
 
    @Test
    void buscaDeveConverterFalhaDeConexao() {

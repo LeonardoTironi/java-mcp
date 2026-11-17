@@ -17,12 +17,22 @@ import tools.jackson.databind.json.JsonMapper;
 class ToolResultsTest {
    private final ToolResults results = new ToolResults(new JsonMapper());
 
+   // registro de exemplo para serializar: texto, enumeração e decimal
    private record Sample(String code, PropertyType type, BigDecimal price) {}
 
    private static String text(CallToolResult result) {
+      // exige um único 'content' e retorna o seu texto
       assertEquals(1,result.content().size());
       return ((TextContent) result.content().get(0)).text();
    }
+
+   // ==========================================================================
+   // Os métodos de teste a seguir verificam os três tipos de resultado que as
+   // ferramentas retornam ao cliente:
+   // - sucesso: resumo seguido dos dados em JSON?
+   // - mensagem: sucesso apenas com texto, sem JSON?
+   // - erro: texto com 'isError' verdadeiro?
+   // ==========================================================================
 
    @Test
    void sucessoDeveConterResumoEJson() {
@@ -35,6 +45,7 @@ class ToolResultsTest {
       assertTrue(text.startsWith("1 imóvel encontrado."));
       assertTrue(text.contains("\"code\" : \"IMV-0001\""));
       assertTrue(text.contains("\"type\" : \"HOUSE\""));
+      // o decimal mantém as casas decimais (não vira 850000.0 nem 8.5E5)
       assertTrue(text.contains("850000.00"));
    }
 
