@@ -1,21 +1,69 @@
 services:
+   # banco de dados de imóveis (PostgreSQL)
+   postgres:
+     image: postgres:17
+     container_name: mcp-postgres
+     environment:
+       POSTGRES_DB: imoveis
+       POSTGRES_USER: postgres
+       POSTGRES_PASSWORD: postgres
+     # disponível apenas nesta máquina (Claude Desktop, cliente, testes)
+     ports:
+       - "127.0.0.1:5432:5432"
+     # na PRIMEIRA criação do contêiner, o Postgres executa, em ordem
+     # alfabética, os scripts desta pasta: 01_schema.sql e 02_seed.sql
+     # (para recriar o banco: docker compose down -v)
+     volumes:
+       - ./src/main/resources/db:/docker-entrypoint-initdb.d:ro
+       - postgres-data:/var/lib/postgresql/data
+     # o serviço só é considerado "pronto" quando aceita conexões
+     healthcheck:
+       test: ["CMD-SHELL", "pg_isready -U postgres -d imoveis"]
+       interval: 5s
+       timeout: 5s
+       retries: 10
+
    # nome do serviço exibido na interface e pelos comandos do Docker
    mcp-inspector:
      # executa o "build" da imagem definido no arquivo "Dockerfile"
      build:
        context: .
        dockerfile: Dockerfile
-     # nome do contêiner 
+     # nome do contêiner
      container_name: mcp-inspector
      # servidor/ip e porta em que a aplicação responderá
      ports:
        - "127.0.0.1:6274:6274"
-     # 
+     #
      # ro: read-only
      volumes:
        - ./server:/opt/mcp/server:ro
+     # conexão do servidor MCP com o banco: dentro da rede do compose o
+     # Postgres é acessado pelo nome do serviço ("postgres"), não "localhost"
+     environment:
+       DB_URL: jdbc:postgresql://postgres:5432/imoveis
+       DB_USER: postgres
+       DB_PASSWORD: postgres
+     # aguarda o banco estar pronto antes de iniciar
+     depends_on:
+       postgres:
+         condition: service_healthy
      # executa o servidor MCP em Java
+     # IMPORTANTE: o Inspector NÃO repassa as variáveis do contêiner ao
+     # processo do servidor (stdio só herda PATH, HOME etc.); por isso elas
+     # são informadas explicitamente com "-e" (sem isso o servidor usa o
+     # padrão localhost:5432, que dentro do contêiner não é o Postgres)
      command:
+       - --web
+       - -e
+       - DB_URL=jdbc:postgresql://postgres:5432/imoveis
+       - -e
+       - DB_USER=postgres
+       - -e
+       - DB_PASSWORD=postgres
        - java
        - -jar
        - /opt/mcp/server/mcp_server01_server.jar
+
+volumes:
+   postgres-data:

@@ -5,6 +5,11 @@ dependency-reduced-pom.xml
 # artefatos gerados pelo perfil "server"
 server/
 
+# Eclipse: workspace (nunca dentro do projeto) e saída de compilação própria
+# (.project, .classpath e .settings são mantidos para facilitar a importação)
+.metadata/
+bin/
+
 # IDEs / SO
 .idea/
 *.iml
