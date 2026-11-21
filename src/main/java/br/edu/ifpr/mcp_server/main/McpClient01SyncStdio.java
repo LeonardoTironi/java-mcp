@@ -1,6 +1,5 @@
 package br.edu.ifpr.mcp_server.main;
 
-import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,9 +24,6 @@ import tools.jackson.databind.json.JsonMapper;
 public class McpClient01SyncStdio {
    private static final Logger LOG =
                             LoggerFactory.getLogger(McpClient01SyncStdio.class);
-   // nome e caminho para o servidor MCP
-   private static final String SERVER_PATH =
-                                         "../../server/mcp_server01_server.jar";
    // objeto cliente para comunicação com o servidor
    private final McpSyncClient client;
 
@@ -42,14 +38,9 @@ public class McpClient01SyncStdio {
    }
 
    private McpSyncClient createClient() {
-      // identifica o servidor a ser chamado/executado
-      File serverJar = new File(SERVER_PATH);
-      // se o objeto File não é um arquivo: erro!!!
-      if (!serverJar.isFile())
-         throw new IllegalStateException("JAR do servidor não encontrado: " +
-		                                 serverJar.getAbsolutePath());
-      // caminho absoluto do programa executável do servidor
-      String jarPath = serverJar.getAbsolutePath();
+      // localiza o programa executável do servidor (raiz do projeto,
+      // target/dist-client ou variável MCP_SERVER_JAR); se não encontrar: erro
+      String jarPath = ServerJarLocator.fromEnvironment().locate().toString();
       LOG.info("Servidor MCP: {}",jarPath);
       // comando para executar a aplicação servidor
       ServerParameters params  = ServerParameters.builder("java")
