@@ -16,6 +16,13 @@ e a IA decide quais ferramentas do servidor chamar e com quais parâmetros.
 
 O MCP define três primitivas básicas: *tools* (ferramentas), *resources* (recursos) e *prompts*. Este servidor oferece as três: **ferramentas**, **recursos** e **prompts**. A comunicação entre cliente e servidor usa o transporte **STDIO**: o cliente executa o servidor como um processo e troca mensagens JSON-RPC pela entrada e saída padrão.
 
+### Demonstração em vídeo
+Veja o servidor em ação no YouTube: o assistente de IA consulta, filtra e compara imóveis usando as ferramentas, recursos e prompts do MCP.
+
+[![Demonstração do MCP Server: Busca de Imóveis](https://img.youtube.com/vi/aIlMGlaIaN0/hqdefault.jpg)](https://youtu.be/aIlMGlaIaN0 "Assistir à demonstração no YouTube")
+
+*Clique na imagem para assistir ao vídeo no YouTube.*
+
 ### Sumário
 - [O que é o MCP](#o-que-é-o-mcp)
 - [Tecnologias](#tecnologias)
@@ -469,17 +476,3 @@ No Eclipse IDE, usar o *goal* `clean verify -Pserver` e, para os testes com banc
 
 ---
 
-#### REFERÊNCIAS ####
-[What is the Model Context Protocol (MCP)? - Documentação Oficial](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro)
-
-[MCP Java SDK](https://github.com/modelcontextprotocol/java-sdk)
-
-[PostgreSQL JDBC Driver](https://jdbc.postgresql.org/documentation/)
-
-[Building a JDBC-based MCP Server: A Developer Guide](https://www.cdata.com/kb/articles/jdbc-mcp-server-dev-guide.rst)
-
-[Learn MCP Java Tutorial - Microsoft](https://github.com/microsoft/lets-learn-mcp-java/tree/main)
-
-[Tutorial 1 no GitHub](https://github.com/eugenp/tutorials/tree/master/java-mcp)
-
-[Tutorial 2 no GitHub](https://github.com/CDataSoftware/cdata-jdbc-mcp-server)
