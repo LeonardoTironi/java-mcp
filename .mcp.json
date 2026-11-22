@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "imoveis": {
+      "command": "java",
+      "args": ["-jar", "server/mcp_server01_server.jar"],
+      "env": {
+        "DB_URL": "jdbc:postgresql://localhost:5432/imoveis",
+        "DB_USER": "postgres",
+        "DB_PASSWORD": "postgres"
+      }
+    }
+  }
+}
